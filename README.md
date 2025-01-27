@@ -13,6 +13,9 @@ docker build -t build-env .
 docker run -e -v $PWD:/src -w /src build-env make
 ```
 
+### CMake (Linux) - without SSL (default)
+mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=RELEASE -DNOSSL=1 .. && make
+
 ### MacOS without SSL
 
 ```
