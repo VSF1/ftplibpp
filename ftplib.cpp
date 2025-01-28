@@ -1199,6 +1199,54 @@ int ftplib::Pwd(char *path, int max)
 	return 1;
 }
 
+int ftplib::FtpXfer(void *buffer, size_t size, const char *path, ftphandle *nControl, accesstype type,
+	transfermode mode) {
+	char *dbuf;
+	size_t size_remaining;
+	ftphandle *nData;
+
+	if (buffer == NULL || size == 0) { 
+		return 0;
+	}		
+	
+	if (type == ftplib::filewriteappend) {
+		if (mp_ftphandle->offset < 0) return 0;
+		size_t offset = mp_ftphandle->offset;
+		dbuf = static_cast<char *>(buffer) + offset;
+		size_remaining = size < offset ? 0 : size - offset;
+	} else {
+		dbuf = static_cast<char *>(buffer);
+		size_remaining = size;
+	} 
+	
+	if (!FtpAccess(path, type, mode, nControl, &nData)) {
+    	return 0;
+  	}
+	
+	if ((type == ftplib::filewrite) || (type == ftplib::filewriteappend)) {
+		int l = FTPLIB_BUFSIZ < size_remaining ? FTPLIB_BUFSIZ : size_remaining;
+		while (l > 0) {
+			int c;
+			if ((c = FtpWrite(dbuf, l, nData)) < l) {
+				printf("short write: passed %d, wrote %d\n", l, c);
+				break;
+			}
+			dbuf += c;
+			size_remaining -= c;
+			l = FTPLIB_BUFSIZ < size_remaining ? FTPLIB_BUFSIZ : size_remaining;
+		}
+	} else {
+		int c;
+		int l = FTPLIB_BUFSIZ < size_remaining ? FTPLIB_BUFSIZ : size_remaining;
+		while ((c = FtpRead(dbuf, l, nData)) > 0) {
+			dbuf += c;
+			size_remaining -= c;
+			l = FTPLIB_BUFSIZ < size_remaining ? FTPLIB_BUFSIZ : size_remaining;			
+		}
+	}
+	return FtpClose(nData);
+}
+
 /*
  * FtpXfer - issue a command and transfer data
  *
@@ -1206,7 +1254,7 @@ int ftplib::Pwd(char *path, int max)
  */
 int ftplib::FtpXfer(const char *localfile, const char *path, ftphandle *nControl, accesstype type, transfermode mode)
 {
-	int l,c;
+	int l;
 	char *dbuf;
 	FILE *local = NULL;
 	ftphandle *nData;
@@ -1238,9 +1286,10 @@ int ftplib::FtpXfer(const char *localfile, const char *path, ftphandle *nControl
 
 	dbuf = static_cast<char*>(malloc(FTPLIB_BUFSIZ));
 	if ((type == ftplib::filewrite) || (type == ftplib::filewriteappend))
-	{
+	{		
 		while ((l = fread(dbuf, 1, FTPLIB_BUFSIZ, local)) > 0)
 		{
+			int c;
 			if ((c = FtpWrite(dbuf, l, nData)) < l)
 			{
 				printf("short write: passed %d, wrote %d\n", l, c);
@@ -1342,6 +1391,14 @@ int ftplib::Get(const char *outputfile, const char *path, transfermode mode, off
 	else return FtpXfer(outputfile, path, mp_ftphandle, ftplib::filereadappend, mode);
 }
 
+int ftplib::Get(void *buffer, std::size_t size, const char *path, transfermode mode, off64_t offset)
+{
+	mp_ftphandle->offset = offset;
+	if (offset == 0) return FtpXfer(buffer, size, path, mp_ftphandle, ftplib::fileread, mode);
+	else return FtpXfer(buffer, size, path, mp_ftphandle, ftplib::filereadappend, mode);
+}
+
+
 /*
  * FtpPut - issue a PUT command and send data from input
  *
@@ -1355,6 +1412,12 @@ int ftplib::Put(const char *inputfile, const char *path, transfermode mode, off6
 	else return FtpXfer(inputfile, path, mp_ftphandle, ftplib::filewriteappend, mode);
 }
 
+int ftplib::Put(void *buffer, std::size_t size, const char *path, transfermode mode, off64_t offset)
+{
+	mp_ftphandle->offset = offset;
+	if (offset == 0) return FtpXfer(buffer, size, path, mp_ftphandle, ftplib::filewrite, mode);
+	else return FtpXfer(buffer, size, path, mp_ftphandle, ftplib::filewriteappend, mode);
+}
 
 int ftplib::Rename(const char *src, const char *dst)
 {
