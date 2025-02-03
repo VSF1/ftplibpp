@@ -18,6 +18,9 @@
 namespace openssl {
 #include <openssl/ssl.h>
 }
+#ifndef _FTPLIB_SSL_CLIENT_METHOD_
+#define _FTPLIB_SSL_CLIENT_METHOD_ openssl::TLSv1_2_client_method
+#endif
 #endif
 
 
@@ -39,29 +42,30 @@ namespace openssl {
 #include <sys/types.h>
 
 #if defined(_WIN32)
-#define SETSOCKOPT_OPTVAL_TYPE static_cast<const char *>
+    #define SETSOCKOPT_OPTVAL_TYPE static_cast<const char *>
 #else
-#define SETSOCKOPT_OPTVAL_TYPE static_cast<void *>
+    #define SETSOCKOPT_OPTVAL_TYPE static_cast<void *>
 #endif
 
 #if defined(_WIN32)
-#define net_read(x, y, z) ::recv(x, reinterpret_cast<char*>(y), z, 0)
-#define net_write(x, y, z) ::send(x, reinterpret_cast<char*>(y), z, 0)
-#define net_close closesocket
+    #define net_read(x, y, z) ::recv(x, reinterpret_cast<char*>(y), z, 0)
+    #define net_write(x, y, z) ::send(x, reinterpret_cast<char*>(y), z, 0)
+    #define net_close closesocket
 #else
-#define net_read ::read
-#define net_write ::write
-#define net_close ::close
+    #define net_read ::read
+    #define net_write ::write
+    #define net_close ::close
 #endif
 
 #if defined(_WIN32)
-typedef int socklen_t;
+    typedef int socklen_t;
 #endif
 
 #if defined(_WIN32)
-#define memccpy _memccpy
-#define strdup _strdup
+    #define memccpy _memccpy
+    #define strdup _strdup
 #endif
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// socket values
@@ -80,6 +84,7 @@ typedef int socklen_t;
 ////////////////////////////////////////////////////////////////////////////////
 /// internal classes 
 ////////////////////////////////////////////////////////////////////////////////
+#if 0
 class plain_connection: public ftplib_connection_iface {
  public:
     plain_connection() {}
@@ -117,6 +122,7 @@ class ssl_connection: public plain_connection {
     }
 };
 #endif
+#endif
 
 static bool inline ends_with(const std::string &str, const std::string &ending) {
     if (ending.size() > str.size()) return false;
@@ -143,8 +149,7 @@ BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved) {
 }
 #endif
 
-
-    void ftplib::ssl_init_lib() {
+void ftplib::ssl_init_lib() {
 #ifndef NOSSL
     static bool ssl_initialized = false;
     if (ssl_initialized) {
@@ -1503,8 +1508,7 @@ int ftplib::ModDate(const std::string &path, std::string *dt) {
     return rv;
 }
 
-int ftplib::Get(const std::filesystem::path &outputfile, const std::string &path, transfermode mode, off64_t offset)
-{
+int ftplib::Get(const std::filesystem::path &outputfile, const std::string &path, transfermode mode, off64_t offset) {
     m_handle->offset = offset;
     if (offset == 0) {
         return FtpXfer(outputfile, path, m_handle, ftplib::fileread, mode);
@@ -1796,6 +1800,15 @@ void ftplib::SetCallbackBytes(off64_t bytes) {
     m_handle->cbbytes = bytes;
 }
 
+void ftplib::SetCorrectPasv() {
+    m_handle->correctpasv = true;
+}
+
+void ftplib::UnsetCorrectPasv() {
+    m_handle->correctpasv = false;
+}
+
+
 void ftplib::SetCallbackIdletime(int time) {
     m_handle->idletime.tv_sec = time / 1000;
     m_handle->idletime.tv_usec = (time % 1000) * 1000;
@@ -1805,7 +1818,7 @@ void ftplib::SetConnmode(connmode mode) {
     m_handle->cmode = mode;
 }
 
-void ftplib::clear_handle(ftphandle *handle) {
+void ftplib::clear_handle(ftphandle_t handle) {
     handle->dir = FTPLIB_CONTROL;
     handle->ctrl = nullptr;
     handle->cmode = ftplib::pasv;
