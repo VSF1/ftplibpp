@@ -58,6 +58,14 @@
 
 #include <sys/types.h>
 
+#define FTPLIB_OK                       (1)
+#define FTPLIB_E_NONE                   (FTPLIB_OK)
+#define FTPLIB_E_ERROR                  (0)
+#define FTPLIB_E_INVALID_IO_OPERATION   (-1)
+#define FTPLIB_E_SSL_NOT_SUPPORTED      (-100)
+#define FTPLIB_E_NO_ANSWER              (-200)
+#define FTPLIB_E_READ_FAILURE           (-201)
+
 // SSL
 typedef struct ssl_st SSL;
 typedef struct ssl_ctx_st SSL_CTX;
@@ -196,7 +204,7 @@ class DLLIMPORT ftplib {
             fxpmethod method);
     ftphandle_t RawOpen(const std::filesystem::path &path, accesstype type, transfermode mode);
     int RawClose(ftphandle_t handle);
-    int RawWrite(void* buf, int len, ftphandle_t handle);
+    int RawWrite(const void* buf, int len, ftphandle_t handle);
     int RawRead(void* buf, int max, ftphandle_t handle);
     // SSL
     int SetDataEncryption(dataencryption enc);
@@ -223,10 +231,32 @@ class DLLIMPORT ftplib {
     int FtpAccess(const std::string &path, accesstype type, transfermode mode, ftphandle_t hcontrol,
             ftphandle_t *hdata);
     int FtpClose(ftphandle_t hdata);
+
+    /// @brief wait for socket to become ready
+    ///
+    /// @details This function waits until the socket is ready for reading or writing
+    /// depending on the value of the ftphandle_t::dir member of the ftphandle_t
+    /// object. If the ftphandle_t::idlecb member is not NULL, that function is called
+    /// for each iteration of the loop, until the socket becomes ready, or the
+    /// timeout is reached.
+    ///
+    /// @param[in] ctl the ftphandle_t object
+    ///
+    /// @returns FTPLIB_E_NONE if the socket is ready, FTPLIB_E_ERROR otherwise
     int socket_wait(ftphandle_t ctl);
-    int readline(std::string *buf, ftphandle_t ctl);
-    int writeline(const std::string &buf, ftphandle_t hdata);
-    int writeline(const char *buf, size_t len, ftphandle_t hdata);
+
+    ///
+    /// @brief  Reads a line from the control connection.
+    ///
+    /// @param[out] buf A pointer to a std::string where the line is stored.
+    /// @param[in]  ctl A pointer to a ftphandle containing the control connection.
+    ///
+    /// @returns The size of the line on success.
+    ///         FTPLIB_E_ERROR on general error.
+    ///         FTPLIB_E_INVALID_IO_OPERATION on io error.
+    ssize_t readline(std::string *buf, ftphandle_t ctl);
+    ssize_t writeline(const std::string &buf, ftphandle_t hdata);
+    ssize_t writeline(const char *buf, size_t len, ftphandle_t hdata);
     int readresp(char c, ftphandle_t hcontrol);
     std::string sprint_rest(off64_t offset);
     void clear_handle(ftphandle_t handle);
