@@ -112,84 +112,84 @@ struct ftphandle {
 class DLLIMPORT ftplib {
  public:
     enum accesstype {
-        dir = 1,
-        dirverbose,
-        fileread,
-        filewrite,
-        filereadappend,
-        filewriteappend
+        accesstype_dir = 1,
+        accesstype_dirverbose,
+        accesstype_fileread,
+        accesstype_filewrite,
+        accesstype_filereadappend,
+        accesstype_filewriteappend
     };
 
     enum transfermode {
-        ascii = 'A',
-        image = 'I'
+        transfermode_ascii = 'A',
+        transfermode_image = 'I'
     };
 
     enum connmode {
-        pasv = 1,
-        port
+        connmode_pasv = 1,
+        connmode_port
     };
 
     enum fxpmethod {
-        defaultfxp = 0,
-        alternativefxp
+        fxpmethod_defaultfxp = 0,
+        fxpmethod_alternativefxp
     };
 
     enum dataencryption {
-        unencrypted = 0,
-        secure
+        dataencryption_unencrypted = 0,
+        dataencryption_secure
     };
 
     ftplib();
     virtual ~ftplib();
 
-    const std::string LastResponse() noexcept;
+    const std::string last_response() noexcept;
 
-    int Connect(const std::string &host);
+    int connect(const std::string &host);
 
-    bool isConnected() const noexcept;
+    bool is_connected() const noexcept;
 
-    int Login(const std::string &user, const std::string &pass);
+    int login(const std::string &user, const std::string &pass);
 
-    int Site(const std::string &cmd);
+    int site(const std::string &cmd);
 
-    int Raw(const std::string &cmd);
+    int raw(const std::string &cmd);
 
-    int SysType(std::string *buf);
+    int systype(std::string *buf);
 
-    int Mkdir(const std::string &path);
+    int mkdir(const std::string &path);
 
-    int Chdir(const std::string &path);
+    int chdir(const std::string &path);
 
-    int Cdup();
+    int cdup();
 
-    int Rmdir(const std::string &path);
+    int rmdir(const std::string &path);
 
-    int Pwd(std::string *path);
+    int pwd(std::string *path);
 
-    int Nlst(const std::filesystem::path &outputfile, const std::string &path);
-    int Nlst(void *buffer, std::size_t size, const std::string &path);
-    int Nlst(std::string *str, const std::string &path);
+    int nlst(const std::filesystem::path &outputfile, const std::string &path);
+    int nlst(void *buffer, std::size_t size, const std::string &path);
+    int nlst(std::string *str, const std::string &path);
 
-    int Dir(const std::filesystem::path &outputfile, const std::string &path);
-    int Dir(void *buffer, std::size_t size, const std::string &path);
+    int dir(const std::filesystem::path &outputfile, const std::string &path);
+    int dir(void *buffer, std::size_t size, const std::string &path);
 
-    int Size(const std::string &path, int *size, transfermode mode);
+    int size(const std::string &path, int *size, transfermode mode);
 
-    int ModDate(const std::string &path, std::string *dt);
+    int moddate(const std::string &path, std::string *dt);
 
-    int Get(const std::filesystem::path &outputfile, const std::string &path, transfermode mode, off64_t offset = 0);
-    int Get(void *buffer, std::size_t size, const std::string &path, transfermode mode, off64_t offset = 0);
+    int get(const std::filesystem::path &outputfile, const std::string &path, transfermode mode, off64_t offset = 0);
+    int get(void *buffer, std::size_t size, const std::string &path, transfermode mode, off64_t offset = 0);
 
-    int Put(const std::filesystem::path &inputfile, const std::string &path, transfermode mode, off64_t offset = 0);
-    int Put(void *buffer, std::size_t size, const std::string &path, transfermode mode, off64_t offset = 0);
+    int put(const std::filesystem::path &inputfile, const std::string &path, transfermode mode, off64_t offset = 0);
+    int put(void *buffer, std::size_t size, const std::string &path, transfermode mode, off64_t offset = 0);
 
 
-    int Rename(const std::string &src, const std::string &dst);
+    int rename(const std::string &src, const std::string &dst);
 
-    int Delete(const std::string &src);
+    int del(const std::string &src);
 
-    int Quit();
+    int quit();
 
     void SetCallbackIdleFunction(FtpCallbackIdle pointer);
     void SetCallbackLogFunction(FtpCallbackLog pointer);
@@ -254,13 +254,13 @@ class DLLIMPORT ftplib {
     /// @returns The size of the line on success.
     ///         FTPLIB_E_ERROR on general error.
     ///         FTPLIB_E_INVALID_IO_OPERATION on io error.
-    ssize_t readline(std::string *buf, ftphandle_t ctl);
-    ssize_t writeline(const std::string &buf, ftphandle_t hdata);
-    ssize_t writeline(const char *buf, size_t len, ftphandle_t hdata);
-    int readresp(char c, ftphandle_t hcontrol);
+    ssize_t read_line(std::string *buf, ftphandle_t ctl);
+    ssize_t write_line(const std::string &buf, ftphandle_t hdata);
+    ssize_t write_line(const char *buf, size_t len, ftphandle_t hdata);
+    int read_resp(char c, ftphandle_t hcontrol);
     std::string sprint_rest(off64_t offset);
     void clear_handle(ftphandle_t handle);
-    int CorrectPasvResponse(unsigned char *v);
+    int correct_pasv_response(unsigned char *v);
 
     void ssl_init_lib();
     void ssl_init_handle();
