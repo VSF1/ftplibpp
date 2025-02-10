@@ -560,7 +560,7 @@ int ftplib::connect(const std::string &host) {
         if ((pse = getservbyname("ftp", "tcp")) == NULL) {
             perror("getservbyname");
             std::free(lhost);
-            return 0;
+            return FTPLIB_E_ERROR;
         }
         sin.sin_port = pse->s_port;
     } else {
@@ -582,7 +582,7 @@ int ftplib::connect(const std::string &host) {
         if ((phe = gethostbyname(lhost)) == NULL) {
             perror("gethostbyname");
             std::free(lhost);
-            return 0;
+            return FTPLIB_E_ERROR;
         }
         memcpy(reinterpret_cast<void *>(&sin.sin_addr), phe->h_addr, phe->h_length);
     }
@@ -591,18 +591,19 @@ int ftplib::connect(const std::string &host) {
     sControl = ::socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sControl == -1) {
         ::perror("socket");
-        return 0;
+        return FTPLIB_E_ERROR;
     }
 
     if (::setsockopt(sControl, SOL_SOCKET, SO_REUSEADDR, SETSOCKOPT_OPTVAL_TYPE(&on), sizeof(on)) == -1) {
         ::perror("setsockopt");
         net_close(sControl);
-        return 0;
+        return FTPLIB_E_ERROR;
     }
     if (::connect(sControl, reinterpret_cast<struct sockaddr *>(&sin), sizeof(sin)) == -1) {
+        
         ::perror("connect");
         net_close(sControl);
-        return 0;
+        return FTPLIB_E_ERROR;
     }
 
     m_handle->handle = sControl;
@@ -610,10 +611,10 @@ int ftplib::connect(const std::string &host) {
     if (this->read_resp('2', m_handle) == 0) {
         net_close(sControl);
         m_handle->handle = 0;
-        return 0;
+        return FTPLIB_E_ERROR;
     }
 
-    return 1;
+    return FTPLIB_E_NONE;
 }
 
 bool ftplib::is_connected() const noexcept {
@@ -960,8 +961,8 @@ int ftplib::FtpOpenPasv(ftphandle_t hcontrol, ftphandle_t *hdata, transfermode m
     sin.sa.sa_data[1] = v[1];
     if (m_handle->offset != 0) {
         std::string lcmd = this->sprint_rest(m_handle->offset);
-        if (!FtpSendCmd(lcmd, '3', hcontrol)) {
-            return (0);
+        if (FtpSendCmd(lcmd, '3', hcontrol) != FTPLIB_E_NONE) {
+            return FTPLIB_E_ERROR;
         }
     }
 
@@ -1004,6 +1005,7 @@ int ftplib::FtpOpenPasv(ftphandle_t hcontrol, ftphandle_t *hdata, transfermode m
     }
 
     if (::connect(sdata, &sin.sa, sizeof(sin.sa)) == -1) {
+        hcontrol->response = std::string("connect:") + strerror(errno);
         ::perror("connect");
         net_close(sdata);
         return (-1);

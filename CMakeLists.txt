@@ -63,12 +63,22 @@ set_target_properties(libftp++ PROPERTIES VERSION ${LIBFTPPP_VERSION_STRING} SOV
 # configure_file(linenoise.pc.in linenoise.pc @ONLY)
 
 # only offer install option if they compiled with release mode
-if(CMAKE_BUILD_TYPE MATCHES "RELEASE")
+if(CMAKE_BUILD_TYPE MATCHES "Release")
 	# adds the 'make install' targets to copy the shared library to /usr/local/lib/ directory
 	install(TARGETS libftp++ DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 	# adds all the relevant headers to /usr/local/include/gphoto2pp when ``make install`` is executed
 	install(FILES ${LIBFTPPP_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libftp++)
 	# install the pkg-config config to system folder
 #	install(FILES ${CMAKE_BINARY_DIR}/linenoise.pc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
-endif(CMAKE_BUILD_TYPE MATCHES "RELEASE")
+endif(CMAKE_BUILD_TYPE MATCHES "Release")
 
+########################################################################################################################
+# Unit Tests
+########################################################################################################################
+# for now only add unit tests in dev mode
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+	enable_testing ()
+	add_subdirectory (tests)
+else (CMAKE_BUILD_TYPE MATCHES "Debug")
+    message ("Skipping unit tests in ${CMAKE_BUILD_TYPE} build.")
+endif (CMAKE_BUILD_TYPE MATCHES "Debug")
