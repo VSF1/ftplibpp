@@ -96,7 +96,8 @@ struct ftphandle {
     off64_t xfered;
     off64_t cbbytes;
     off64_t xfered1;
-    std::string response;
+    std::string response;  // stores the response from the server
+    std::string errormsg;  // stores the internal eror message
 // SSL
     SSL* ssl;
     SSL_CTX* ctx;
@@ -265,6 +266,12 @@ class DLLIMPORT ftplib {
     void ssl_init_lib();
     void ssl_init_handle();
     void ssl_term_handle();
+
+    /// @brief Update the error message of the ftplib object
+    void update_errormsg(const std::string &prefix = "");
+
+    /// @brief Update the error message of the target object
+    void update_errormsg(ftphandle_t target, const std::string &prefix = "");
 };
 
 #endif  // FTPLIB_H_

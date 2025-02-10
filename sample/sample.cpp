@@ -1,11 +1,11 @@
 #include "ftplib.h"
 
-int main(void)
-{
+int main(void) {
 	ftplib *ftp = new ftplib();
-	ftp->Connect("ftp.gwdg.de:21");
-	ftp->Login("anonymous", "");
-	ftp->Dir(NULL, "/pub/linux/apache");
-	ftp->Quit();
+	ftp->connect("ftp.gwdg.de:21");
+	ftp->login("anonymous", "");
+	ftp->dir(NULL, "/pub/linux/apache");
+	ftp->quit();
+    delete ftp;
 	return 0;
 }
