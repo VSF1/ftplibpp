@@ -23,7 +23,7 @@ set(LIBFTPPP_SOURCES ${LIBFTPPP_SOURCE_FILES})
 set(LIBFTPPP_HEADERS ${LIBFTPPP_HEADER_FILES})
 
 # Compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -D_REENTRANT")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -fsanitize=address -D_REENTRANT")
 if(NOT NOSSL)
     if(APPLE)
         set(LIBS ssl crypto)
