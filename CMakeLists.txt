@@ -1,11 +1,13 @@
 cmake_minimum_required (VERSION 3.10)
-project (libftp++ DESCRIPTION "A client ftp library")
+project (LIBFTPPP DESCRIPTION "A client ftp library")
 
 if(CMAKE_BUILD_TYPE)
-    message("Building ${CMAKE_BUILD_TYPE} build.")
+    message("Building ${PROJECT_NAME} in ${CMAKE_BUILD_TYPE} build.")
 elseif(NOT CMAKE_BUILD_TYPE)
     message(FATAL_ERROR "No build type specified. Use -DCMAKE_BUILD_TYPE=[DEBUG|RELEASE] to specify.")
 endif(CMAKE_BUILD_TYPE)
+
+find_package(Sanitizers QUIET)
 
 # set the version of our library
 # MAJOR, is significant breaking changes
@@ -23,19 +25,20 @@ set(LIBFTPPP_SOURCES ${LIBFTPPP_SOURCE_FILES})
 set(LIBFTPPP_HEADERS ${LIBFTPPP_HEADER_FILES})
 
 # Compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -fsanitize=address -D_REENTRANT")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -D_REENTRANT")
+
 if(NOT NOSSL)
     if(APPLE)
         set(LIBS ssl crypto)
     elseif(UNIX)
         set(LIBS ssl)
-    else()
+    else(UNIX)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOSSL")
         set(LIBS "")
-    endif()
-else()
+    endif(APPLE)
+else(NOT NOSSL)
     set(LIBS "")
-endif()
+endif(NOT NOSSL)
 
 # where the library will be built to
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/libs)
@@ -49,6 +52,10 @@ set_target_properties(libstatic PROPERTIES OUTPUT_NAME ftp++)
 
 add_library(libftp++ SHARED $<TARGET_OBJECTS:objlib>)
 set_target_properties(libftp++ PROPERTIES OUTPUT_NAME ftp++)
+if(Sanitizers_FOUND)
+    message(STATUS "Sanitizers found")
+    add_sanitizers(libftp++)
+endif(Sanitizers_FOUND)
 
 # Link libraries for the shared library
 target_link_libraries(libftp++ PUBLIC ${LIBS})
@@ -63,22 +70,22 @@ set_target_properties(libftp++ PROPERTIES VERSION ${LIBFTPPP_VERSION_STRING} SOV
 # configure_file(linenoise.pc.in linenoise.pc @ONLY)
 
 # only offer install option if they compiled with release mode
-if(CMAKE_BUILD_TYPE MATCHES "Release")
+if(CMAKE_BUILD_TYPE MATCHES "^(RELEASE|Release)")
 	# adds the 'make install' targets to copy the shared library to /usr/local/lib/ directory
 	install(TARGETS libftp++ DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 	# adds all the relevant headers to /usr/local/include/gphoto2pp when ``make install`` is executed
 	install(FILES ${LIBFTPPP_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libftp++)
 	# install the pkg-config config to system folder
 #	install(FILES ${CMAKE_BINARY_DIR}/linenoise.pc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
-endif(CMAKE_BUILD_TYPE MATCHES "Release")
+endif(CMAKE_BUILD_TYPE MATCHES "^(RELEASE|Release)")
 
 ########################################################################################################################
 # Unit Tests
 ########################################################################################################################
 # for now only add unit tests in dev mode
-if (CMAKE_BUILD_TYPE MATCHES "Debug")
+if (CMAKE_BUILD_TYPE MATCHES "^(DEBUG|Debug)")
 	enable_testing ()
 	add_subdirectory (tests)
-else (CMAKE_BUILD_TYPE MATCHES "Debug")
+else (CMAKE_BUILD_TYPE MATCHES "^(DEBUG|Debug)")
     message ("Skipping unit tests in ${CMAKE_BUILD_TYPE} build.")
-endif (CMAKE_BUILD_TYPE MATCHES "Debug")
+endif (CMAKE_BUILD_TYPE MATCHES "^(DEBUG|Debug)")
