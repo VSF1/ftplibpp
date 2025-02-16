@@ -8,6 +8,7 @@ find_package(Sanitizers)
 
 find_package(CxxTest)
 if(CXXTEST_FOUND)
+    message("CxxTest found building tests")
 	enable_testing()
 	set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/cxxtests)
 	
@@ -25,7 +26,7 @@ if(CXXTEST_FOUND)
 		# Make sure YourLib is linked to each app
 		target_link_libraries(${TESTNAME} libftp++ ${LIBS})
         if (Sanitizers_FOUND)
-            message(STATUS "Sanitizers found")
+            message(STATUS "Adding sanitizers to ${TESTNAME}")
             add_sanitizers(${TESTNAME})
         endif (Sanitizers_FOUND)
 	endforeach(testssourcefile ${TESTS_SOURCE_FILES})
