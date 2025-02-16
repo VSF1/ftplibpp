@@ -1,3 +1,11 @@
+
+set(SANITIZE_ADDRESS TRUE)
+
+#
+# search for sanitizers
+#
+find_package(Sanitizers)
+
 find_package(CxxTest)
 if(CXXTEST_FOUND)
 	enable_testing()
@@ -12,10 +20,13 @@ if(CXXTEST_FOUND)
 	FILE(GLOB TESTS_SOURCE_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.h")
 	foreach(testssourcefile ${TESTS_SOURCE_FILES})
 		# I used a simple string replace, to cut off .h.
-		string( REPLACE ".h" "" testname ${testssourcefile} )
-		CXXTEST_ADD_TEST( ${testname} "${testname}.cc" "${CMAKE_CURRENT_SOURCE_DIR}/${testssourcefile}" )
+		string(REPLACE ".h" "" TESTNAME ${testssourcefile})
+		CXXTEST_ADD_TEST(${TESTNAME} "${testname}.cc" "${CMAKE_CURRENT_SOURCE_DIR}/${testssourcefile}")
 		# Make sure YourLib is linked to each app
-		target_link_libraries( ${testname} libftp++ ${LIBS} )
+		target_link_libraries(${TESTNAME} libftp++ ${LIBS})
+        if (Sanitizers_FOUND)
+            add_sanitizers(${TESTNAME})
+        endif (Sanitizers_FOUND)
 	endforeach(testssourcefile ${TESTS_SOURCE_FILES})
 else (CXXTEST_FOUND)
     message("CXXTEST_FOUND: ${CXXTEST_FOUND}")
