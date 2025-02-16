@@ -25,6 +25,7 @@ if(CXXTEST_FOUND)
 		# Make sure YourLib is linked to each app
 		target_link_libraries(${TESTNAME} libftp++ ${LIBS})
         if (Sanitizers_FOUND)
+            message(STATUS "Sanitizers found")
             add_sanitizers(${TESTNAME})
         endif (Sanitizers_FOUND)
 	endforeach(testssourcefile ${TESTS_SOURCE_FILES})
