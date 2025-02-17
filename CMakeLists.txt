@@ -1,14 +1,29 @@
 cmake_minimum_required (VERSION 3.10)
 project (LIBFTPPP DESCRIPTION "A client ftp library")
 
+# Configuration specific to being the main project
+if(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
+    set(CMAKE_VERBOSE_MAKEFILE ON)
+    set(LIBFTPPP_NOT_SUBPROJECT ON)
+endif(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
+
 if(CMAKE_BUILD_TYPE)
     message("Building ${PROJECT_NAME} in ${CMAKE_BUILD_TYPE} build.")
 elseif(NOT CMAKE_BUILD_TYPE)
     message(FATAL_ERROR "No build type specified. Use -DCMAKE_BUILD_TYPE=[DEBUG|RELEASE] to specify.")
 endif(CMAKE_BUILD_TYPE)
 
-find_package(Sanitizers QUIET)
+option(FTPLIBPP_BUILD_TESTS "Build ftplibpp tests." Off)
+option(FTPLIBPP_NOSSL "Disable SSL library support." Off)
 
+find_package(Sanitizers)
+if(Sanitizers_FOUND)
+    message(STATUS "Sanitizers found, using settings:")
+    message(STATUS "\tSANITIZE_ADDRESS   : ${SANITIZE_ADDRESS}")
+    message(STATUS "\tSANITIZE_MEMORY    : ${SANITIZE_MEMORY}")
+    message(STATUS "\tSANITIZE_THREAD    : ${SANITIZE_THREAD}")
+    message(STATUS "\tSANITIZE_UNDEFINED : ${SANITIZE_UNDEFINED}")
+endif(Sanitizers_FOUND)
 # set the version of our library
 # MAJOR, is significant breaking changes
 # MINOR, is when we might have changed signatures of existing functions
@@ -27,7 +42,7 @@ set(LIBFTPPP_HEADERS ${LIBFTPPP_HEADER_FILES})
 # Compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -D_REENTRANT")
 
-if(NOT NOSSL)
+if(NOT FTPLIBPP_NOSSL)
     if(APPLE)
         set(LIBS ssl crypto)
     elseif(UNIX)
@@ -36,9 +51,9 @@ if(NOT NOSSL)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOSSL")
         set(LIBS "")
     endif(APPLE)
-else(NOT NOSSL)
+else(NOT FTPLIBPP_NOSSL)
     set(LIBS "")
-endif(NOT NOSSL)
+endif(NOT FTPLIBPP_NOSSL)
 
 # where the library will be built to
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/libs)
@@ -53,7 +68,6 @@ set_target_properties(libstatic PROPERTIES OUTPUT_NAME ftp++)
 add_library(libftp++ SHARED $<TARGET_OBJECTS:objlib>)
 set_target_properties(libftp++ PROPERTIES OUTPUT_NAME ftp++)
 if(Sanitizers_FOUND)
-    message(STATUS "Sanitizers found")
     add_sanitizers(libftp++)
 endif(Sanitizers_FOUND)
 
@@ -82,10 +96,9 @@ endif(CMAKE_BUILD_TYPE MATCHES "^(RELEASE|Release)")
 ########################################################################################################################
 # Unit Tests
 ########################################################################################################################
-# for now only add unit tests in dev mode
-if (CMAKE_BUILD_TYPE MATCHES "^(DEBUG|Debug)")
+if (FTPLIBPP_BUILD_TESTS)
 	enable_testing ()
 	add_subdirectory (tests)
-else (CMAKE_BUILD_TYPE MATCHES "^(DEBUG|Debug)")
-    message ("Skipping unit tests in ${CMAKE_BUILD_TYPE} build.")
-endif (CMAKE_BUILD_TYPE MATCHES "^(DEBUG|Debug)")
+else (FTPLIBPP_BUILD_TESTS)
+    message (STATUS "Skipping unit tests in ${CMAKE_BUILD_TYPE} build.")
+endif (FTPLIBPP_BUILD_TESTS)
