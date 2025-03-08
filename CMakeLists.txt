@@ -58,14 +58,14 @@ endif(NOT FTPLIBPP_NOSSL)
 # where the library will be built to
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/libs)
 
-add_library(objlib OBJECT ${LIBFTPPP_SOURCES} ${LIBFTPPP_HEADERS})
+add_library(libftpobj OBJECT ${LIBFTPPP_SOURCES} ${LIBFTPPP_HEADERS})
 # shared libraries need PIC
-set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
+set_property(TARGET libftpobj PROPERTY POSITION_INDEPENDENT_CODE 1)
 
-add_library(libstatic STATIC $<TARGET_OBJECTS:objlib>)
-set_target_properties(libstatic PROPERTIES OUTPUT_NAME ftp++)
+add_library(libftp++-static STATIC $<TARGET_OBJECTS:libftpobj>)
+set_target_properties(libftp++-static PROPERTIES OUTPUT_NAME ftp++)
 
-add_library(libftp++ SHARED $<TARGET_OBJECTS:objlib>)
+add_library(libftp++ SHARED $<TARGET_OBJECTS:libftpobj>)
 set_target_properties(libftp++ PROPERTIES OUTPUT_NAME ftp++)
 if(Sanitizers_FOUND)
     add_sanitizers(libftp++)
